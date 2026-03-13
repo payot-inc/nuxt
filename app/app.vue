@@ -14,6 +14,8 @@ const config: AppProps = {
 
 <template>
   <UApp v-bind="config">
-
+    <NuxtLayout>
+      <NuxtPage />
+    </NuxtLayout>
   </UApp>
 </template>
