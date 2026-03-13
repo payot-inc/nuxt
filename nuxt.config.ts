@@ -1,7 +1,7 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   extends: ["github:payot-inc/nuxt#ui"],
-  modules: [],
+  modules: ["@vueuse/nuxt"],
   css: ["~/assets/css/main.css"],
   ssr: false,
   compatibilityDate: "2025-01-15",
