@@ -1,14 +1,16 @@
+import { defineNuxtPlugin } from '#app';
+
 function updateLoading(el: HTMLElement, value: boolean | string) {
   const overlay = (el as any)._loadingOverlay as HTMLElement | undefined;
-  
-  // 1. SSR 속성 제어: 값이 falsy하면 SSR CSS를 트리거하는 속성을 확실히 제거
+
+  // falsy 값(false, undefined, null)일 경우 즉시 모든 로딩 제거
   if (!value && value !== '') {
     el.removeAttribute('data-v-loading');
     if (overlay) overlay.style.display = 'none';
     return;
   }
 
-  // 2. 값이 존재하면 SSR 속성을 제거하고 JS 오버레이를 활성화
+  // 값이 존재할 경우 SSR 속성 제거 후 JS 오버레이 활성화
   el.removeAttribute('data-v-loading');
   if (overlay) {
     overlay.style.display = 'flex';
@@ -18,7 +20,6 @@ function updateLoading(el: HTMLElement, value: boolean | string) {
 }
 
 export default defineNuxtPlugin((app) => {
-  // SSR 스타일 정의 (기존과 동일)
   useHead({
     style: [{
       id: 'v-loading-ssr',
@@ -34,13 +35,17 @@ export default defineNuxtPlugin((app) => {
 
   app.vueApp.directive<HTMLElement, boolean | string>('loading', {
     getSSRProps(binding) {
-      if (!binding.value && binding.value !== '') return {};
-      // SSR 상태임을 명시적으로 불리언 문자열로 저장
-      return { 'data-v-loading': 'true' };
+      // 값이 명확히 true일 때만 속성 부여
+      if (binding.value || binding.value === '') {
+        return { 'data-v-loading': 'true' };
+      }
+      return {};
     },
 
     mounted(el, binding) {
-      // 오버레이 생성 로직
+      // 마운트 즉시 SSR 속성 강제 제거
+      el.removeAttribute('data-v-loading');
+
       const overlay = document.createElement('div');
       overlay.className = 'absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 rounded-[inherit] bg-white/70 dark:bg-neutral-900/70 backdrop-blur-sm';
       overlay.style.display = 'none';
@@ -50,7 +55,7 @@ export default defineNuxtPlugin((app) => {
 
       const label = document.createElement('span');
       label.dataset.loadingText = '';
-      label.className = 'text-sm text-muted';
+      label.className = 'text-sm text-muted-foreground';
 
       overlay.append(spinner, label);
       (el as any)._loadingOverlay = overlay;
@@ -61,8 +66,6 @@ export default defineNuxtPlugin((app) => {
       }
 
       el.appendChild(overlay);
-      
-      // 초기 상태 업데이트
       updateLoading(el, binding.value);
     },
 
@@ -78,6 +81,8 @@ export default defineNuxtPlugin((app) => {
       if ((el as any)._loadingPositionSet) {
         el.style.position = '';
       }
+      delete (el as any)._loadingOverlay;
+      delete (el as any)._loadingPositionSet;
     },
   });
 });
