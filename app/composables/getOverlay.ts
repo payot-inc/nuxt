@@ -8,6 +8,6 @@ export default function getOverlay<T extends Component>(
 ) {
   const overlay = useOverlay();
   const modal = overlay.create<T>(comp, options);
-  onBeforeRouteLeave(() => overlay.closeAll());
+  onUnmounted(() => overlay.closeAll());
   return modal;
 }
